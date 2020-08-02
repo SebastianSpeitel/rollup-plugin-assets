@@ -1,0 +1,41 @@
+{
+  "name": "@sebastianspeitel/rollup-plugin-assets",
+  "version": "0.0.1",
+  "description": "",
+  "main": "legacy/index.js",
+  "module": "dist/index.js",
+  "files": [
+    "legacy",
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build --silent"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SebastianSpeitel/rollup-plugin-assets.git"
+  },
+  "keywords": [
+    "rollup-plugin",
+    "assets"
+  ],
+  "author": "Sebastian Speitel",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/SebastianSpeitel/rollup-plugin-assets/issues"
+  },
+  "homepage": "https://github.com/SebastianSpeitel/rollup-plugin-assets#readme",
+  "dependencies": {
+    "@rollup/pluginutils": "^3.1.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^14.0.0",
+    "@rollup/plugin-node-resolve": "^8.4.0",
+    "@rollup/plugin-typescript": "^5.0.2",
+    "@types/node": "^14.0.27",
+    "rollup": "^2.23.0",
+    "tslib": "^2.0.0",
+    "typescript": "^3.9.7"
+  }
+}
