@@ -4,6 +4,7 @@
   "description": "",
   "main": "legacy/index.js",
   "module": "dist/index.js",
+  "types": "types/index.d.ts",
   "files": [
     "legacy",
     "dist"
