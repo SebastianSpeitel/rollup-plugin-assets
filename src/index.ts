@@ -1,5 +1,4 @@
-import { createFilter, FilterPattern } from "@rollup/pluginutils";
-import type { Plugin, SourceDescription } from "rollup";
+import { createFilter, FilterPattern, dataToEsm } from "@rollup/pluginutils";
 import { basename } from "path";
 import { promises as fs } from "fs";
 
@@ -9,6 +8,10 @@ interface Options {
   encoding?: BufferEncoding;
 }
 const PREFIX = "asset:";
+const EXPORTS = {
+  path: "path",
+  source: "source"
+};
 
 export default function assets(options: Options = {}) {
   const filter = createFilter(options.include ?? /^asset:.*/, options.exclude);
@@ -40,19 +43,29 @@ export default function assets(options: Options = {}) {
         source: buffer
       });
 
-      let code = `
-        export const path = import.meta.ROLLUP_FILE_URL_${refId}.slice(7);
-      `.trim();
+      let code = `export const ${EXPORTS.path} = import.meta.ROLLUP_FILE_URL_${refId};`;
 
-      code += `
-        export const source = ${JSON.stringify(buffer.toString(encoding))};
-      `.trim();
+      const encoded = buffer.toString(encoding);
+
+      code += dataToEsm({ [EXPORTS.source]: encoded }, { namedExports: true });
 
       return {
         code,
-        syntheticNamedExports: false,
         moduleSideEffects: false
       } as SourceDescription;
+    },
+    resolveFileUrl({ moduleId, relativePath, format }) {
+      if (!moduleId.startsWith(PREFIX)) return;
+
+      switch (format) {
+        case "cjs":
+          return `__dirname+${JSON.stringify("/" + relativePath)}`;
+        case "es":
+          return `new URL(${JSON.stringify(
+            relativePath
+          )},import.meta.url).pathname`;
+      }
+    },
     }
   };
 
