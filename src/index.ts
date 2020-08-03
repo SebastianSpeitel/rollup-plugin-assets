@@ -19,7 +19,7 @@ export default function assets(options: Options = {}) {
     async resolveId(id, importer) {
       if (!filter(id)) return null;
 
-      const plainId = id.slice(PREFIX.length);
+      const plainId = id.startsWith(PREFIX) ? id.slice(PREFIX.length) : id;
       const result = await this.resolve(plainId, importer);
       if (!result) {
         this.warn(`Coudn't resolve asset ${plainId} (imported by ${importer})`);
@@ -31,7 +31,7 @@ export default function assets(options: Options = {}) {
     async load(id) {
       if (!id.startsWith(PREFIX)) return null;
 
-      let [, assetPath] = id.split(":", 2);
+      const assetPath = id.slice(PREFIX.length);
       const buffer = await fs.readFile(assetPath);
 
       const refId = this.emitFile({
