@@ -1,4 +1,5 @@
 import { createFilter, FilterPattern, dataToEsm } from "@rollup/pluginutils";
+import type { Plugin, SourceDescription, EmittedAsset } from "rollup";
 import { basename } from "path";
 import { promises as fs } from "fs";
 
@@ -16,6 +17,10 @@ const EXPORTS = {
 export default function assets(options: Options = {}) {
   const filter = createFilter(options.include ?? /^asset:.*/, options.exclude);
   const encoding = options.encoding ?? "base64";
+
+  const assets: {
+    [id: string]: EmittedAsset & { referenceId: string; used?: boolean };
+  } = {};
 
   const Assets: Plugin = {
     name: "assets",
@@ -49,6 +54,8 @@ export default function assets(options: Options = {}) {
 
       code += dataToEsm({ [EXPORTS.source]: encoded }, { namedExports: true });
 
+      assets[id] = { type: "asset", referenceId: refId };
+
       return {
         code,
         moduleSideEffects: false
@@ -66,6 +73,32 @@ export default function assets(options: Options = {}) {
           )},import.meta.url).pathname`;
       }
     },
+    generateBundle(_, bundle) {
+      for (let file of Object.values(bundle)) {
+        if (file.type === "chunk") {
+          const modules = Object.entries(file.modules);
+
+          for (let [id, module] of modules) {
+            if (!id.startsWith(PREFIX)) continue;
+
+            const asset = assets[id];
+            if (!asset) {
+              this.warn(`${id} was rendered but not resolved.`);
+              continue;
+            }
+
+            if (module.renderedExports.includes(EXPORTS.path)) {
+              asset.used = true;
+            }
+          }
+        }
+      }
+
+      for (let asset of Object.values(assets)) {
+        if (asset.used) continue;
+        const fileName = this.getFileName(asset.referenceId);
+        delete bundle[fileName];
+      }
     }
   };
 
